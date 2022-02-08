@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta charset="utf-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie-edge">
+    <title>ThreeJS Practice</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js" integrity="sha256-6XMVI0zB8cRzfZjqKcD01PBsAy3FlDASrlC8SxCpInY=" crossorigin="anonymous"></script>
+    <style>
+        body{
+            margin: 0;
+        }
+        canvas {
+            display:block;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.5/dat.gui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.2/TweenMax.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src= "https://cdn.rawgit.com/sole/tween.js/master/src/Tween.js"></script>
+    <!-- <script src= "https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.min.js"></script> -->
+    <script src= "https://cdn.rawgit.com/chandlerprall/ThreeCSG/master/ThreeCSG.js"></script>
+
+    <div class = "container w-container"></div>
+    <div id = "container" class= "div-block"></div>
+    <script type="module">
+        // var container = document.createElement("container");
+        // document.getElementById("container").appendChild(container);
+        // var container = document.getElementById('container');
+        // container.appendChild(renderer.domElement);
+
+        //object import
+        import {GLTFLoader} from "./GLTFLoader.js";
+        
+        
+        var mouseX = 0, mouseY = 0;
+        
+        var scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2( 0x000000, 0.003 );
+        var camera = new THREE.PerspectiveCamera(
+            30, window.innerWidth/window.innerHeight,
+            1,
+            3000
+        );
+        
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setClearColor( scene.fog.color );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild(renderer.domElement);
+
+        var loader = new GLTFLoader();
+        var obj;
+        loader.load("scene.gltf",function(gltf){
+            obj = gltf.scene;
+            obj.scale.set(.1,.1,.1);
+            scene.add(gltf.scene);
+        }, undefined, function ( error ) {
+
+            console.error( error );
+
+        } );
+        
+        var geometry = new THREE.SphereGeometry( .3, 15, 8 );
+
+        var materials = [
+	    new THREE.MeshLambertMaterial( { color: 0xffffff } ),
+	    new THREE.MeshLambertMaterial( { color: 0xffffff } ),
+	    new THREE.MeshLambertMaterial( { color: 0xffffff } ),
+        ];
+        var quads = [];
+
+        var stars = new THREE.Object3D();
+
+        // pivot.position = scene.position;
+
+        function getRandom(min,max) {
+        return Math.floor(Math.random()*(max-min+1)+min);
+	    return Math.floor(Math.random());
+        }
+
+
+        for ( var i = 0; i < 4000; i ++ ) {
+
+            quads[i] = new THREE.Mesh(geometry, materials[getRandom(255, 255)] );
+            quads[i].position.x = ( Math.random() - 0.5 ) * 1000;
+            quads[i].position.y = ( Math.random() - 0.5 ) * 1000;
+            quads[i].position.z = ( Math.random() - 0.5 ) * 1000;
+            quads[i].rotation.x = ( Math.random() - 0.5 ) * 1000;
+            quads[i].rotation.y = ( Math.random() - 0.5 ) * 1000;
+
+            quads[i].o_pos_x = quads[i].position.x;
+            quads[i].o_pos_y = quads[i].position.y;
+
+            stars.add( quads[i] );
+
+        }
+
+        scene.add(stars);
+
+
+        scene.background = new THREE.Color(0x000000)
+        
+        //lights
+        // var light = new THREE.DirectionalLight(0xffffff, 3)
+        // light.position.set(100,100,50)
+        // scene.add(light)
+        var ambientLight = new THREE.AmbientLight( 0xffffff, .5 );
+            scene.add( ambientLight );
+
+            var lights = [];
+            lights[ 0 ] = new THREE.PointLight( 0x00ff29, .5, 0 );
+            lights[ 1 ] = new THREE.PointLight( 0x00ff29, .5, 0 );
+            lights[ 2 ] = new THREE.PointLight( 0x00ff29, .5, 0 );
+
+            lights[ 0 ].position.set( 0, 200, 0 );
+            lights[ 1 ].position.set( 100, 200, 100 );
+            lights[ 2 ].position.set( - 100, - 200, - 100 );
+
+            scene.add( lights[ 0 ] );
+            scene.add( lights[ 1 ] );
+            scene.add( lights[ 2 ] );
+
+            window.addEventListener( 'resize', onWindowResize, false );
+
+
+        function onWindowResize() {
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize( window.innerWidth, window.innerHeight );
+
+        }
+
+        function onDocumentMouseMove( event ) {
+            mouseX = event.clientX - window.innerWidth / 2;
+            mouseY = event.clientY - window.innerHeight / 2;
+        }
+
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+        camera.position.set(0,0,100)
+
+        function animate (){
+            requestAnimationFrame(animate);
+            obj.rotation.y += 0.005;
+            obj.rotation.x += 0.005;
+            obj.rotation.z += 0.005;            
+
+            scene.rotation.y += 0.001;
+            scene.rotation.x += 0.001;
+            scene.rotation.z += 0.001;
+
+            camera.position.x += (mouseX - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene,camera);
+        }
+
+       
+
+    
+
+        animate();
+
+
+
+stars.rotation.y += 0.001;
+stars.rotation.x += 0.001;
+
+
+
+render();
+
+
+
+    </script>
+
+
+
+
+</body>
+</html>
